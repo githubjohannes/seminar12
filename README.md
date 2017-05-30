@@ -664,27 +664,6 @@ auch andere Strategien (facebook, google, etc.) einbinden.
 
 ## Teil 3 - Javascript Web Token
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Web Tokens haben den Vorteil, dass darin Informationen darüber wozu der Benutzer
+authorisiert ist enthalten sein können.
 

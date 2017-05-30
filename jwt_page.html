@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h4>Token:</h4>
+    <textarea rows="5" cols="100" id="tokenInput">...</textarea>
+    <p>
+    <button onclick="callAPI();">API request losschicken</button>
+    <h4>Resultat:</h4>
+    <p id="Resultat">
+    </p>
+  </body>
+  <script type="text/javascript">
+    var resultat = document.getElementById('Resultat');
+    var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3NlbWluYXIxMi1ob2w0Mi5jOXVzZXJzLmlvLyIsIm5hbWUiOiJNci4gWCIsImFkbWluIjp0cnVlLCJqdGkiOiJlMTRjNzRiMS02ZDAxLTRkNTUtYWZjYS0zMmRkZTg5Njc4M2IiLCJpYXQiOjE0OTYxMzQ3MzcsImV4cCI6MTQ5NjEzNTAzN30.04wNVFytghj5A3HSyJlBgxK-1VGVXkq8lJkxtVuduLI'
+    var tokenInput = document.getElementById('tokenInput');
+    tokenInput.value = token;
+    function callAPI() {
+      var http = new XMLHttpRequest();
+      var url = "secret";
+      http.open("GET", url, true);
+      http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+      http.setRequestHeader("Bearer", String(tokenInput.value).trim());
+      
+      http.onreadystatechange = function() {//Call a function when the state changes.
+          if(http.readyState == 4 && http.status == 200) {
+              resultat.innerHTML = 'Geheime Daten die empfangen wurden: ' + http.responseText;
+          } else {
+            if(http.readyState == 4) {
+                resultat.innerHTML = 'Fehler: ' + http.status + ' ' + http.statusText + ' ' + http.responseText
+            }
+          }
+      }
+      http.send();  
+    }
+  </script>
+</html>
