@@ -91,7 +91,7 @@ aber eben nicht HTML Seiten sind.
 
 Javascript Object Notation. Daten im Format 
 
-```
+```JS
  {
   "Herausgeber": "Xema",
   "Nummer": "1234-5678-9012-3456",
@@ -127,7 +127,7 @@ yRQYnWzskCZUxPwaQupWkiUzKELZ49eM7oWxAQK_ZXw`
 
 Im Klartext:
 
-```
+```JS
 {
   “alg”: “HS256”,
   “typ”: “JWT”
@@ -175,11 +175,11 @@ in der Kommandozeile eingeben
 - Eventuell muss `nvm use stable` eingegeben werden
 - Jetzt müssen noch die node_modules installiert werden mit `npm install`
 
-#### Schritt 1: simple.js
+### Schritt 1: simple.js
 Folgendes ist jetzt die allereinfachste Art mit node auf HTTP requests zu
 hören und sie zu beantworten.
 
-```
+```JS
 const http = require('http');
 
 const hostname = process.env.IP;
@@ -212,13 +212,13 @@ Antwort. Wir setzen in der Antwort den Header `Content-Type` auf `text/plain`.
 Üblicher ist hier `text/html`. Der Browser behandelt es dann in der Darstellung
 anders. 
 
-#### Schritt 2: simple2.js
+### Schritt 2: simple2.js
 
 Da aber die Library `http` etwas kompliziert werden kann, gibt es ein Paket, 
 dass darauf aufsetzt und dieses nennt sicher `express`. Es wird wie folgt
 verwendet:
 
-```
+```JS
 var express = require('express');
 var app = express();
 
@@ -237,7 +237,7 @@ Auch das ist wieder selbsterklärend. Einfach mal kurz Zeile für Zeile durchgeh
 Damit wir es in Cloud9 gut verwenden können werden die Umgebungsvariablen `IP`
 und `PORT` benutzt, die man mit `process.env` in Javascript erhält.
 
-#### Schritt 3: simple3.js
+### Schritt 3: simple3.js
 
 Jetzt wollen wir ein Anmeldeschirm schicken. Um es einfach zu halten, habe
 ich den HTML Code "Inline" codiert. Der Browser ist so freundlich
@@ -248,7 +248,7 @@ wird man sehen, dass plötzlich der Code in ein `<html><head></head><body> ... <
 
 Hier also das Programm:
 
-```
+```JS
 var express = require('express');
 var app = express();
 
@@ -283,7 +283,7 @@ Insbesondere fehlt das `import` Statement. Deswegen wird noch `require` benutzt.
 Aber die Backticks sind möglich. Man nennt sie "Template Literals" und es ist 
 auch möglich Variablen einzubinden. Man könnte mitten drin sowas wie
 
-```
+```JS
   <p>
     Hallo ${name}!
   </p>
@@ -307,7 +307,7 @@ die Eingabe aus.
 Gemacht wird damit aber noch nichts, weil die Route `/login` wurde noch nicht 
 implementiert
 
-#### Schritt 4: simple4.js
+### Schritt 4: simple4.js
 
 Jetzt wird es schon einiges länger, weil wir müssen jetzt etwas "Middleware" 
 einsetzen. Was im Zusammenhang mit express.js als Middleware verstanden wird 
@@ -327,7 +327,7 @@ Kommentaren näher erläutert.
 Dann in `app.post` wird für `/login` dieser Body ausgelesen. Mehr machen wir
 hier mal noch nicht. Der Rest des Programmes ist unverändert.
 
-```
+```JS
 var express = require('express');
 var app = express();
 
@@ -417,14 +417,14 @@ console.log('start listening',port,hostname);
 app.listen(port, hostname);
 ```
 
-#### Schritt 5: simple5.js
+### Schritt 5: simple5.js
 
 Da wir ja irgendwie rausfinden müssen ob Benutzer und Passwort richtig sind, 
 wird jetzt eine Funktion eingefügt. Um es wieder einfach zu halten, wird alles
 im Code gehalten, statt der Zugriff auf eine Datenbank. Folgendes kommt dazu 
 bzw. wird verändert:
 
-```
+```JS
 "use strict"
 
 ...
@@ -506,7 +506,7 @@ Suchen in einem Array in dem sich Objekte befinden. Das ist ES6 Syntax. In ES6
 hat jedes Array die Methode `find`. Diese Methode erwartet als Parameter eine Funktion.
 Also würde man etwas schreiben wie:
 
-```
+```JS
   users.find(function(x) { 
     return x.username === input.username
   }
@@ -524,7 +524,7 @@ es kürzer. Es gibt noch andere Vorteile, aber das würde jetzt zu weit führen.
 Hier gibt es mehr dazu:
 https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Functions/Pfeilfunktionen
 
-#### Schritt 6: simple6.js
+### Schritt 6: simple6.js
 
 Nachdem jetzt das Passwort geprüft wurde wäre der Benutzer angemeldet. Aber 
 wie wissen wir denn, dass der gleiche Benutzer wieder kommt? Nun, nichts ist
@@ -534,7 +534,7 @@ ab und gibt den Cookie bei jedem Request auf der Seite wieder mit.
 
 Hier der veränderte Code:
 
-```
+```JS
 // *************************************************************************
 // Etwas zusätzliche Middleware um aus dem Header die Cookies zu lesen und sie zu setzen
 // *************************************************************************
@@ -665,5 +665,171 @@ auch andere Strategien (facebook, google, etc.) einbinden.
 ## Teil 3 - Javascript Web Token
 
 Web Tokens haben den Vorteil, dass darin Informationen darüber wozu der Benutzer
-authorisiert ist enthalten sein können.
+authorisiert ist enthalten sein können. Es kann darin auch das Verfallsdatum
+gespeichert werden. Das Webtoken kann nicht verfälscht werden ohne Private Key.
+Aber es kann natürlich gestohlen und verloren gehen. Dort ist der recht
+sicherere Cookie Mechanismus weiterhin sinnvoll. Daher kann man Cookie nicht 
+mit JWT vergleichen.
 
+### jwt_demo.js
+
+Hier erstellen wir ein JWT und prüfen es. Es gibt einige JWT Bibliotheken. 
+nJWT ist vielleicht nicht die Beste (oder vielleicht doch), aber sie ist 
+sehr einfach zu verwenden:
+
+```JS
+var nJwt = require('njwt');
+
+var supergeheimesPasswort = 'geheim'; // Könnte von einem geschütztem File kommen, das eingelesen wird als Private Key
+
+// Offizielle: https://www.iana.org/assignments/jwt/jwt.xhtml
+// Oder eigene
+var claims = {
+ "iss": "https://seminar12-hol42.c9users.io/",
+ "name": "Mr. X",
+ "admin": true,
+}
+
+var jwt = nJwt.create(claims,supergeheimesPasswort,"HS256");
+jwt.setExpiration(new Date().getTime() + (5*60*1000)); // in 5 Minuten
+
+var token = jwt.compact();
+
+console.log('das JWT: ', jwt)
+console.log('-------------------------------------------------------------------------')
+console.log('das JWT compact: ', token)
+console.log('-------------------------------------------------------------------------')
+
+try {
+    nJwt.verify(token,"falsches Passwort", 'HS256')
+    console.log('Korrekt mit falschem Passwort')
+} catch (e) {
+    console.log('Fehler mit falschem Passwort: ', e)
+} 
+console.log('-------------------------------------------------------------------------')
+
+try {
+    nJwt.verify(token,"geheim", 'HS256')
+    console.log('Korrekt mit geheim')
+} catch (e) {
+    console.log('Fehler mit geheim: ', e)
+}
+console.log('-------------------------------------------------------------------------')
+```
+
+### jwt_api.js
+
+Auf der Serverseite kann man es dann wie folgt verifizieren. Besonders dann
+wenn es eine REST API ist:
+
+```JS
+"use strict"
+var express = require('express');
+var nJwt = require('njwt');
+var app = express();
+
+var supergeheimesPasswort = 'geheim'; // Könnte von einem geschütztem File kommen, das eingelesen wird als Private Key
+
+// *************************************************************************
+// Middleware für Logging
+// *************************************************************************
+
+var myLogger = function (req, res, next) {
+  console.log('log:', req.method, req.originalUrl);
+  next();
+};
+
+app.use(myLogger);
+
+// *************************************************************************
+// Middleware, für Route /secret
+// *************************************************************************
+app.get('/secret', function (req,res) {
+  console.log('Anfrage bei /secret')
+  let token = req.get('bearer')
+  console.log('Anfrage mit token', token)
+
+  res.setHeader('Content-Type', 'text/html')
+  
+  if (!token) {
+    res.status(401).end('Das darfst Du nicht') // 401 Unauthorized
+  }
+
+  try {
+    let verifiedJWT = nJwt.verify(token,supergeheimesPasswort, 'HS256')
+    console.log('verifiedJWT:', verifiedJWT)
+    if (verifiedJWT.body.admin) {
+      res.end('Chuck Norris')
+    } else {
+      res.status(403).end('Richtiges Token aber Du bist kein Admin!')
+    }
+  } catch (e) {
+    console.log('Error')
+    console.log(e)
+    res.status(403).end(e.userMessage) // 403 Forbidden
+  }
+
+});
+
+// *************************************************************************
+// Middleware für die normale Seite
+// *************************************************************************
+app.get('/', function (req, res) {
+  res.sendFile(__dirname + '/jwt_page.html');
+});
+
+// *************************************************************************
+// Jetzt wird gehorcht
+// *************************************************************************
+const hostname = process.env.IP;
+const port = process.env.PORT || 8080;
+
+console.log('start listening',port,hostname);
+
+app.listen(port, hostname);
+```
+
+### jwt_page.html
+
+Auf der Frontseite kann es hiermit getestet werden. Du musst nur sehr
+wahrscheinlich das neue Token verwenden, weil es auf nur 5 Minuten eingestellt
+wurde.
+
+```HTML
+<!DOCTYPE html>
+<html>
+  <body>
+    <h4>Token:</h4>
+    <textarea rows="5" cols="100" id="tokenInput">...</textarea>
+    <p>
+    <button onclick="callAPI();">API request losschicken</button>
+    <h4>Resultat:</h4>
+    <p id="Resultat">
+    </p>
+  </body>
+  <script type="text/javascript">
+    var resultat = document.getElementById('Resultat');
+    var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3NlbWluYXIxMi1ob2w0Mi5jOXVzZXJzLmlvLyIsIm5hbWUiOiJNci4gWCIsImFkbWluIjp0cnVlLCJqdGkiOiJlMTRjNzRiMS02ZDAxLTRkNTUtYWZjYS0zMmRkZTg5Njc4M2IiLCJpYXQiOjE0OTYxMzQ3MzcsImV4cCI6MTQ5NjEzNTAzN30.04wNVFytghj5A3HSyJlBgxK-1VGVXkq8lJkxtVuduLI'
+    var tokenInput = document.getElementById('tokenInput');
+    tokenInput.value = token;
+    function callAPI() {
+      var http = new XMLHttpRequest();
+      var url = "secret";
+      http.open("GET", url, true);
+      http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+      http.setRequestHeader("Bearer", String(tokenInput.value).trim());
+      
+      http.onreadystatechange = function() {//Call a function when the state changes.
+          if(http.readyState == 4 && http.status == 200) {
+              resultat.innerHTML = 'Geheime Daten die empfangen wurden: ' + http.responseText;
+          } else {
+            if(http.readyState == 4) {
+                resultat.innerHTML = 'Fehler: ' + http.status + ' ' + http.statusText + ' ' + http.responseText
+            }
+          }
+      }
+      http.send();  
+    }
+  </script>
+</html>
+```
