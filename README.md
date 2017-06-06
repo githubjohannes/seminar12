@@ -31,7 +31,7 @@ Deutsch: Verschlüsselungsverfahren. Manchmal auch Cypher oder Cypher Algorithm.
 
 ### Private Key
 
-Sollte geheim bleiben. Private Key erlaubt das entschlüsseln von Daten, die
+Sollte geheim bleiben. Private Key erlaubt das Entschlüsseln von Daten, die
 mit einem zugehörigen Public Key verschlüsselt wurden.
 
 ### Public Key
@@ -66,7 +66,7 @@ Verschlüsselungskey für diese Sitzung. Server entschlüsselt mit dem Private
 Key den Verschlüsselungskey.
 4) Server an Browser: Hier sind die mit dem Verschlüsselungskey verschlüsselten
 Daten.
-Welches Symmetrische Verschlüsselungsverfahren benutzt wird wählt der Server
+Welches symmetrische Verschlüsselungsverfahren benutzt wird wählt der Server
 anhand eine Liste von Verfahren aus, die der Browser vorschlägt: Welche 
 Dein Browser benutzt kannst Du hier abfragen: https://cc.dcsec.uni-hannover.de/
 
@@ -78,7 +78,7 @@ alles verschlüsselt. Sehen kann man im Browser die URL und die Daten, aber
 
 Bei jedem HTTP Request geht auch ein Header zum Browser und ein Header vom 
 Browser zum Server. Alle Cookies gehen immer hin und her im Header, sofern
-der Cookie noch gültig ist. Es sind einfach ein klein wenig Daten die 
+der Cookie noch gültig ist. Es sind einfach ein klein wenig Daten, die 
 beim Browser gespeichert werden können.
 
 ### REST
@@ -118,12 +118,14 @@ bestimmten Server kommen konnte und damit den Sender des JWT berechtigt
 auf bestimmte Daten auf dem Server zuzugreifen bzw. zu weiteren Operationen
 berechtigt. Zu was der Sender des JWT berechtigt ist, muss sich der Server
 nicht merken, weil es steht alles im JWT drin. Vorteil ist, das Systeme 
-sehr skalierbar sind.
+dadurch sehr skalierbar sind. Man stellt einfach ein weiteren Server hin, 
+dieser weitere Rechnung muss im Hauptspeicher nichts über die Session wissen,
+er kann einfach den JWT nehmen, prüfen und wissen, dass er korrekt ist.
 
 Beispiel eines JWT (3 Teile, durch Punkte getrennt):
-`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
-eyJpc3MiOiJ0b3B0YWwuY29tIiwiZXhwIjoxNDI2NDIwODAwLCJodHRwOi8vdG9wdGFsLmNvbS9qd3RfY2xhaW1zL2lzX2FkbWluIjp0cnVlLCJjb21wYW55IjoiVG9wdGFsIiwiYXdlc29tZSI6dHJ1ZX0.
-yRQYnWzskCZUxPwaQupWkiUzKELZ49eM7oWxAQK_ZXw`
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ0b3B0YWwuY29tIiwiZXhwIjoxNDI2NDIwODAwLCJodHRwOi8vdG9wdGFsLmNvbS9qd3RfY2xhaW1zL2lzX2FkbWluIjp0cnVlLCJjb21wYW55IjoiVG9wdGFsIiwiYXdlc29tZSI6dHJ1ZX0.yRQYnWzskCZUxPwaQupWkiUzKELZ49eM7oWxAQK_ZXw
+```
 
 Im Klartext:
 
@@ -143,10 +145,10 @@ Im Klartext:
 ```
 Quelle: https://www.toptal.com/web/cookie-free-authentication-with-json-web-tokens-an-example-in-laravel-and-angularjs
 
-### payload
+### Payload
 
 Hat nicht mit Zahlungsverkehr zu tun. Das sind die eigentlichen Daten 
-nicht das darum herum, wie Header oder Signatur usw. Im JWT bezeichnet man
+nicht das Drumherum, wie Header oder Signatur usw. Im JWT bezeichnet man
 den mittleren Teil als "payload".
 
 
@@ -215,7 +217,7 @@ anders.
 ### Schritt 2: simple2.js
 
 Da aber die Library `http` etwas kompliziert werden kann, gibt es ein Paket, 
-dass darauf aufsetzt und dieses nennt sicher `express`. Es wird wie folgt
+das darauf aufsetzt und dieses nennt sich `express`. Es wird wie folgt
 verwendet:
 
 ```JS
@@ -299,21 +301,21 @@ auf dem Server das Formular geschickt wird (hier `/login`)
 - `div` verursacht in diesem Fall dass `label` und `input` zusammen bleiben
 - `label` ist das Label eines Eingabefeldes
 - `input` ist das Eingebefeld. `name` wird beim Senden des Feldes an den Server
-wichtig. `type` gibt an wie sich das Eingabefeld verhält. `password` blendet 
+wichtig. `type` gibt an, wie sich das Eingabefeld verhält. `password` blendet 
 die Eingabe aus.
-- `input type="submit"` ist dann der Knopf mit dem man das Formular losschickt
+- `input type="submit"` ist dann der Knopf, mit dem man das Formular losschickt
 - Ein Enter in einem Formularfeld triggered aber auch die `action`
 
-Gemacht wird damit aber noch nichts, weil die Route `/login` wurde noch nicht 
-implementiert
+Gemacht wird damit aber noch nichts, weil die Route `/login`  noch nicht 
+implementiert wurde.
 
 ### Schritt 4: simple4.js
 
-Jetzt wird es schon einiges länger, weil wir müssen jetzt etwas "Middleware" 
+Jetzt wird es schon einiges länger, weil wir müssen etwas "Middleware" 
 einsetzen. Was im Zusammenhang mit express.js als Middleware verstanden wird 
-ist in folgendem Link gut beschrieben:  http://expressjs.com/de/guide/writing-middleware.html
+ist in folgendem Link gut beschrieben: http://expressjs.com/de/guide/writing-middleware.html
 
-Zur Demo habe ich unten einen Logger definiert. Einfach eine Funktion die etwas
+Zur Demo habe ich unten einen Logger definiert. Einfach eine Funktion, die etwas
 aus dem Request Header auf der Console ausgibt. Damit dieses Stück Middleware
 verwendet wird, wird es mit `app.use` eingebunden.
 
@@ -321,7 +323,7 @@ Aber es wird Middleware auch eingebunden bei `app.get` oder `app.post`
 
 Um die Eingabefelder auszulesen, müssen wir den Request Body auslesen können. Dazu
 benötigt es ein Paket `body-parser`, darin sind mehrere "Middleware" Funktionen
-enthalten. Davon verwenden wir zwei: `urlencoded` und `json`. Beises wird in den 
+enthalten. Davon verwenden wir zwei: `urlencoded` und `json`. Beides wird in den 
 Kommentaren näher erläutert.
 
 Dann in `app.post` wird für `/login` dieser Body ausgelesen. Mehr machen wir
@@ -376,7 +378,7 @@ app.post('/login', function (req,res) {
   
   // JSON ist standard Javascript Library. Stringify macht string daraus. 
   // Parameter 1: Javascript Objekt
-  // Paramater 2: Funktion die den String verändert (hier keine)
+  // Parameter 2: Funktion die den String verändert (hier keine)
   // Parameter 3: Anzahl der Leerstellen, macht es etwas schöner
   res.write('Die Eingabe war:\n' + JSON.stringify(req.body, null, 2))
   
@@ -528,7 +530,7 @@ https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Functions/Pfeilfu
 
 Nachdem jetzt das Passwort geprüft wurde wäre der Benutzer angemeldet. Aber 
 wie wissen wir denn, dass der gleiche Benutzer wieder kommt? Nun, nichts ist
-völlig sicher aber viele Jahre schon wurde das mit Cookies gelöst. Ein Cookie 
+völlig sicher, aber viele Jahre schon wurde das mit Cookies gelöst. Ein Cookie 
 kann in einer HTTP Response mitgeschickt werden. Der Browser legt es automatisch 
 ab und gibt den Cookie bei jedem Request auf der Seite wieder mit.
 
@@ -606,7 +608,7 @@ Wenn man darauf wartet kommt es einem länger vor.
 
 ## Teil 2 - passport.js
 
-Im Teil 2 schauen wir uns an wie password.js verwendet. Dieses Modul baut
+Im Teil 2 schauen wir uns an wie passport.js verwendet. Dieses Modul baut
 auf express.js auf. Es gibt verschiedene "Strategien" die password.js 
 beherrscht. Z.B. kann man sich mit seinen Google Konto oder mit seinem 
 Facebook Konto anmelden. Aber auch ein "Lokales" Passwort funktioniert 
@@ -643,7 +645,7 @@ Email: jack@example.com
 (Log out)
 ```
 
-Im Sourcecode `server.js` ist der kommentierte Teil zunächst am wichtigsten. 
+Im Sourcecode `server.js` ist der kommentierte Teil zunächst am Wichtigsten. 
 Dort wird passport.js konfiguriert. Danach wird das Routing gemacht und nur 
 dann, wenn der Benutzer angemeldet ist, kann man zum `/profile` bzw. `logout`.
 
@@ -664,12 +666,13 @@ auch andere Strategien (facebook, google, etc.) einbinden.
 
 ## Teil 3 - Javascript Web Token
 
-Web Tokens haben den Vorteil, dass darin Informationen darüber wozu der Benutzer
+Web Tokens haben den Vorteil, dass darin Informationen darüber, wozu der Benutzer
 authorisiert ist enthalten sein können. Es kann darin auch das Verfallsdatum
 gespeichert werden. Das Webtoken kann nicht verfälscht werden ohne Private Key.
 Aber es kann natürlich gestohlen und verloren gehen. Dort ist der recht
 sicherere Cookie Mechanismus weiterhin sinnvoll. Daher kann man Cookie nicht 
-mit JWT vergleichen.
+mit JWT vergleichen. Das Web Token kann auch im Cookie gespeichert und hin 
+und her gereicht werden.
 
 ### jwt_demo.js
 
@@ -833,3 +836,55 @@ wurde.
   </script>
 </html>
 ```
+
+## Teil 4 - OAuth mit Google
+
+Der vierte Teil ist ein Beispiel wie man sich über das Google Konto authentifiziert.
+Das Protokoll ist OAuth2 (Version 2). Es gibt dies auch für Facebook und andere 
+Provider wie Twitter etc. Passport hat die ganze Liste http://passportjs.org/
+
+Dieses Beispiel ist rein auf der HTML Seite. Das File google_auth.html einfach
+mit dem Apache Server starten. 
+
+```HTML
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="171911842290-u70siar7h2c4rp7hg8do0c5gismthsik.apps.googleusercontent.com">
+  </head>
+  <body>
+    <div id="SignIn" class="g-signin2" data-onsuccess="onSignIn"style="visibility:initial;"></div>
+    <a id="SignOut" href="#" onclick="signOut();" style="visibility:hidden;">Sign out</a>
+  </body>
+  <script type="text/javascript">
+    var signInElement = document.getElementById('SignIn');
+    var signOutElement = document.getElementById('SignOut');
+    function onSignIn(googleUser) {
+      signInElement.style.visibility = 'hidden'
+      signOutElement.style.visibility = 'initial'
+      var profile = googleUser.getBasicProfile();
+      console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+      console.log('Name: ' + profile.getName());
+      console.log('Image URL: ' + profile.getImageUrl());
+      console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+    }
+    function signOut() {
+      var auth2 = gapi.auth2.getAuthInstance();
+      auth2.signOut().then(function () {
+        signInElement.style.visibility = 'initial'
+        signOutElement.style.visibility = 'hidden'
+        console.log('User signed out.');
+      });
+    }
+  </script>
+</html>
+```
+
+Ein Beispiel um ein Node Server zu haben wäre hier, man muss nur alles was "facebook"
+heisst durch "google" ersetzen: https://github.com/passport/express-4.x-facebook-example
+
+Mit index_google.js kann man das Beispiel starten.
+
+Die API und das Client Secret erhält man indem man bei Google https://console.developers.google.com
+

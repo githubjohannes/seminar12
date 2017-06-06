@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="171911842290-u70siar7h2c4rp7hg8do0c5gismthsik.apps.googleusercontent.com">
+  </head>
+  <body>
+    <div id="SignIn" class="g-signin2" data-onsuccess="onSignIn"style="visibility:initial;"></div>
+    <a id="SignOut" href="#" onclick="signOut();" style="visibility:hidden;">Sign out</a>
+  </body>
+  <script type="text/javascript">
+    var signInElement = document.getElementById('SignIn');
+    var signOutElement = document.getElementById('SignOut');
+    function onSignIn(googleUser) {
+      signInElement.style.visibility = 'hidden'
+      signOutElement.style.visibility = 'initial'
+      var profile = googleUser.getBasicProfile();
+      console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+      console.log('Name: ' + profile.getName());
+      console.log('Image URL: ' + profile.getImageUrl());
+      console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+    }
+    function signOut() {
+      var auth2 = gapi.auth2.getAuthInstance();
+      auth2.signOut().then(function () {
+        signInElement.style.visibility = 'initial'
+        signOutElement.style.visibility = 'hidden'
+        console.log('User signed out.');
+      });
+    }
+  </script>
+</html>
