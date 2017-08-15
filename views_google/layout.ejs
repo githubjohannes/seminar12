@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Passport-Google (OAuth 2.0) Example</title>
+	</head>
+	<body>
+		<% if (!user) { %>
+			<p>
+			<a href="/">Home</a> | 
+			<a href="/auth/google">Log In</a>
+			</p>
+		<% } else { %>
+			<p>
+			<a href="/">Home</a> | 
+			<a href="/account">Account</a> | 
+			<a href="/logout">Log Out</a>
+			</p>
+		<% } %>
+			<br>
+			<br>
+			<a id="SignOutGoogle" href="https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue=https://seminar12-hol42.c9users.io">Von Google selbst abmelden</a>
+	</body>
+</html>

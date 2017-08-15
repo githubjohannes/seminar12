@@ -929,7 +929,7 @@ sicherere Cookie Mechanismus weiterhin sinnvoll. Daher kann man Cookie nicht
 mit JWT vergleichen. Das Web Token kann auch im Cookie gespeichert und hin 
 und her gereicht werden. JWT wird dann interessant, wenn man ein externen
 Dienstleister verwendet für den Authentifzierungs und Authorisierungs zu
-übernehmen (z.B. Auth0) oder wenn man einen zentralen Server In-House benutzt
+übernehmen (z.B. Auth0 oder onelogin) oder wenn man einen zentralen Server In-House benutzt
 für alle Authentifizierungs und Authorisierungsaufgaben.
 
 ### jwt_demo.js
@@ -1146,3 +1146,240 @@ Mit index_google.js kann man das Beispiel starten.
 
 Die API und das Client Secret erhält man indem man bei Google https://console.developers.google.com
 
+
+## Teil 5 - OAuth mit Google und Passport im Backend
+
+Im Node Backend zu überprüfen ob der Benutzer korrekt authentifiziert ist 
+kann wie im obigen Beispiel Teil 2 gesehen mit passport.js erfolgen indem
+man Username / Passwort abspeichert und prüft. Aber man kann auch über einen
+Provider zum Beispiel Googgle sich anmelden und abmelden. 
+
+Bei Google wird nachgefragt: Ist das "juergen.hollfelder@gmail.com". Wenn
+bereits bei Google angemeldet, sagt Google: Ja. Wenn noch nicht angemeldet,
+sagt Google "Ein Moment bitte, ich frag ihn mal nach seinem Passwort, wenn
+er es korrekt eingibt, dann ist er es wirklich".
+
+Wenn dann unser Node Backend mal weiss, dass diese Session sich korrekt 
+authentifiziert hat, kann man sich sogar bei Google abmelden und trotzdem
+bleibt man in unserer App angemeldet.
+
+Das lässt sich vorführen indem man mit `server_google.js` rumspielt.
+
+Das Beispiel ist das offizielle Passport Beispiel leicht modifiziert.
+
+Zuerst werden die ganzen Libraries eingebunden
+
+```JS
+var express          = require( 'express' )
+  , app              = express()
+  , server           = require( 'http' ).createServer( app ) 
+  , passport         = require( 'passport' )
+  , util             = require( 'util' )
+  , bodyParser       = require( 'body-parser' )
+  , cookieParser     = require( 'cookie-parser' )
+  , morgan           = require( 'morgan' )
+  , session          = require( 'express-session' )
+//  , RedisStore       = require( 'connect-redis' )( session )
+  , GoogleStrategy   = require( 'passport-google-oauth2' ).Strategy;
+```
+
+Redis benutzen wir nicht. Das wäre um die Session ID zwischenzuspeichern, 
+falls uns der Server runterfällt, wäre das eine zentrale Datenbank wo 
+die Session Id abgelegt werden kann. Das wäre auch dann hilfreich, wenn
+man das Backend skalieren möchte. Mehrere Server laufen gleichzeitig. Load
+Balancing verteilt die Anfragen. Egal wo die Session dann rauskommt, Redis
+hat die Session Information. Redis ist sehr, sehr schnell in-Memory in C 
+programmiert und wird auch wird nicht so schnell ein Bottleneck.
+
+Dann folgt das Konfigurieren von Passport. Mit dem Secret kann man jetzt
+natürlich manipulieren und ich habe das alles öffentlich in Github. So 
+könnte dann jeder so tun, als sei er meine App und ich habe irgendwann
+bei Google schon gesagt Client_ID "651770834814-ov40uicbvpbs0j434fkqu72ag8plnohp.apps.googleusercontent.com"
+darf meine Daten wissen etc. Irgendwann lösche ich aber die App in der 
+Console von Google.
+
+```JS
+// API Access link for creating client ID and secret:
+// https://code.google.com/apis/console/
+var GOOGLE_CLIENT_ID      = '651770834814-ov40uicbvpbs0j434fkqu72ag8plnohp.apps.googleusercontent.com'
+  , GOOGLE_CLIENT_SECRET  = 'ujZX_OjfTO4_w-xqqBYObKiE'
+  , BASE_URL              = 'https://seminar12-hol42.c9users.io';
+
+// Passport session setup.
+//   To support persistent login sessions, Passport needs to be able to
+//   serialize users into and deserialize users out of the session.  Typically,
+//   this will be as simple as storing the user ID when serializing, and finding
+//   the user by ID when deserializing.  However, since this example does not
+//   have a database of user records, the complete Google profile is
+//   serialized and deserialized.
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(obj, done) {
+  done(null, obj);
+});
+
+
+// Use the GoogleStrategy within Passport.
+//   Strategies in Passport require a `verify` function, which accept
+//   credentials (in this case, an accessToken, refreshToken, and Google
+//   profile), and invoke a callback with a user object.
+passport.use(new GoogleStrategy({
+    clientID:     GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    //NOTE :
+    //Carefull ! and avoid usage of Private IP, otherwise you will get the device_id device_name issue for Private IP during authentication
+    //The workaround is to set up thru the google cloud console a fully qualified domain name such as http://mydomain:3000/ 
+    //then edit your /etc/hosts local file to point on your private IP. 
+    //Also both sign-in button + callbackURL has to be share the same url, otherwise two cookies will be created and lead to lost your session
+    //if you use it.
+    callbackURL: BASE_URL + "/auth/google/callback",
+    passReqToCallback   : true
+  },
+  function(request, accessToken, refreshToken, profile, done) {
+    // asynchronous verification, for effect...
+    process.nextTick(function () {
+      
+      // To keep the example simple, the user's Google profile is returned to
+      // represent the logged-in user.  In a typical application, you would want
+      // to associate the Google account with a user record in your database,
+      // and return that user instead.
+      return done(null, profile);
+    });
+  }
+));
+```
+
+Danach folgt wieder die Konfiguration von Express und einige Routen die 
+angesprungen werden bei erfolgreichem Login:
+
+```JS
+
+// configure Express
+app.set('views', __dirname + '/views_google');
+app.set('view engine', 'ejs');
+// app.use( morgan('combined'));
+app.use( express.static(__dirname + '/public'));
+app.use( cookieParser()); 
+app.use( bodyParser.json());
+app.use( bodyParser.urlencoded({
+	extended: true
+}));
+app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
+/* We do not run a redis database in Cloud 9
+app.use( session({ 
+	secret: 'cookie_secret',
+	name:   'kaas',
+	store:  new RedisStore({
+		host: process.env.IP || '127.0.0.1',
+		port: 6379
+	}),
+	proxy:  true,
+    resave: true,
+    saveUninitialized: true
+})); */
+app.use( passport.initialize());
+app.use( passport.session());
+
+app.get('/', function(req, res){
+  res.render('layout', { user: req.user });
+});
+
+app.get('/account', ensureAuthenticated, function(req, res){
+  res.render('account', { user: req.user });
+});
+
+// GET /auth/google
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  The first step in Google authentication will involve
+//   redirecting the user to google.com.  After authorization, Google
+//   will redirect the user back to this application at /auth/google/callback
+app.get('/auth/google', passport.authenticate('google', { scope: [
+       'https://www.googleapis.com/auth/plus.login',
+       'https://www.googleapis.com/auth/plus.profile.emails.read'] 
+}));
+
+// GET /auth/google/callback
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  If authentication fails, the user will be redirected back to the
+//   login page.  Otherwise, the primary route function function will be called,
+//   which, in this example, will redirect the user to the home page.
+app.get( '/auth/google/callback', 
+    	passport.authenticate( 'google', { 
+    		successRedirect: '/',
+    		failureRedirect: '/login'
+}));
+
+app.get('/logout', function(req, res){
+  req.logout();
+  res.redirect('/');
+});
+
+console.log('listen to: ', process.env.PORT || 8080)
+server.listen(process.env.PORT || 8080);
+
+// Simple route middleware to ensure user is authenticated.
+//   Use this route middleware on any resource that needs to be protected.  If
+//   the request is authenticated (typically via a persistent login session),
+//   the request will proceed.  Otherwise, the user will be redirected to the
+//   login page.
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) { return next(); }
+  res.redirect('/login');
+}
+```
+
+Die zwei `.ejs` die benutzt werden sind auch schnell erklärt. 
+
+layout.ejs:
+
+```EJS
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Passport-Google (OAuth 2.0) Example</title>
+	</head>
+	<body>
+		<% if (!user) { %>
+			<p>
+			<a href="/">Home</a> | 
+			<a href="/auth/google">Log In</a>
+			</p>
+		<% } else { %>
+			<p>
+			<a href="/">Home</a> | 
+			<a href="/account">Account</a> | 
+			<a href="/logout">Log Out</a>
+			</p>
+		<% } %>
+			<br>
+			<br>
+			<a id="SignOutGoogle" href="https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue=https://seminar12-hol42.c9users.io">Von Google selbst abmelden</a>
+	</body>
+</html>
+```
+
+Wenn die Uservariable verfügbar ist, ist man angemeldet sonst nicht. Entsprechend
+wird das eine oder andere an Links zur Verfügung gestellt. Um das Prinzip 
+zu demonstrieren, was passiert, wenn man auch bei Google selbst abgemeldet ist
+wurde noch der spezielle Link aufgenommen um sich ganz von Google abzumelden.
+
+account.ejs:
+
+```EJS
+<p>ID: <%= user.id %></p>
+<p>Name: <%= user.displayName %></p>
+<p>Image: <img src="<%= user.photos[0].value %>"></img></p>
+<a href="/">Menü</a>
+```
+
+## Zusammenfassung
+
+Session Cookies sind die Art wie das Backend weiss, dass es immernoch
+der gleiche Benutzer ist, der hier anfrägt.
+
+Passwort Überprüfungen (Authentifizierungen) können auch bei dritten erfolgen. 
+Eine API kann dann abfragen ob die Authentifizierung erfolgreich war. JWTs
+können in so einem Fall, dann nützlich sein wenn auch Authorisierungsdaten
+übermittelt werden.
