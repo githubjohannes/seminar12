@@ -72,7 +72,7 @@ app.post('/login', function (req,res) {
   if (ret === 'OK') {
      let options = {
         maxAge: 1000 * 60 * 0.75, // 45 Sekunden nur, rein zu Demo
-        httpOnly: true,           // Verhindert, dass der Cookie von Skripten ausgelesen wird
+        httpOnly: true,           // Verhindert, dass der Cookie von Skripten manipuliert wird
         signed: true              // Digitales signieren des Cookies
     }
 

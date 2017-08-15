@@ -374,7 +374,7 @@ verwendet wird, wird es mit `app.use` eingebunden.
 Aber es wird Middleware auch eingebunden bei `app.get` oder `app.post`
 
 Um die Eingabefelder auszulesen, müssen wir den Request Body auslesen können. Dazu
-benötigt es ein Paket `body-parser`, darin sind mehrere "Middleware" Funktionen
+benötigt es ein Paket: `body-parser`, darin sind mehrere "Middleware" Funktionen
 enthalten. Davon verwenden wir zwei: `urlencoded` und `json`. Beides wird in den 
 Kommentaren näher erläutert.
 
@@ -697,7 +697,7 @@ Email: jack@example.com
 (Log out)
 ```
 
-Im Sourcecode `server.js` ist der kommentierte Teil zunächst am Wichtigsten. 
+Im Sourcecode `server.js` ist der kommentierte Teil zunächst am wichtigsten. 
 Dort wird passport.js konfiguriert. Danach wird das Routing gemacht und nur 
 dann, wenn der Benutzer angemeldet ist, kann man zum `/profile` bzw. `logout`.
 
@@ -716,15 +716,221 @@ zu ejs siehe hier: http://www.embeddedjs.com/
 Was ist jetzt daran besser? Es sind erprobte Module und man kann sehr leicht
 auch andere Strategien (facebook, google, etc.) einbinden.
 
+Stück für Stück also der Source Code:
+
+```JS
+var express = require('express');
+var passport = require('passport');
+var Strategy = require('passport-local').Strategy;
+var db = require('./db');
+```
+
+Wir holen uns die benötigten Node Module. Insbesondere die "Local" Strategie
+von Passport (nicht die Strategie "Google" oder "Facebook" etc.).
+
+Besonders ist dieser Require: `var db = require('./db');`. Weil es handelt
+sich um ein Verzeichnis. Automatisch wird `index.js` gelesen.
+
+```JS
+exports.users = require('./users');
+```
+
+Das ist nichts anders als, dass wir eine Variable `users` zurück erhalten. Diese
+wird aber aus `.db/users.js` befüllt und ist dann ein Javascript Objekt, bestehend
+aus dem Array `records` und zwei Funktionen zum auffinden eines Benutzers. Das
+Passwort ist aus Demozwecken Klartext:
+
+```JS
+var records = [
+    { id: 1, username: 'jack', password: 'secret', displayName: 'Jack', emails: [ { value: 'jack@example.com' } ] }
+  , { id: 2, username: 'jill', password: 'birthday', displayName: 'Jill', emails: [ { value: 'jill@example.com' } ] }
+];
+
+exports.findById = function(id, cb) {
+  console.log('findById', id);
+  process.nextTick(function() {
+    var idx = id - 1;
+    if (records[idx]) {
+      cb(null, records[idx]);
+    } else {
+      cb(new Error('User ' + id + ' does not exist'));
+    }
+  });
+}
+
+exports.findByUsername = function(username, cb) {
+  console.log('findByUsername', username);
+  process.nextTick(function() {
+    for (var i = 0, len = records.length; i < len; i++) {
+      var record = records[i];
+      if (record.username === username) {
+        return cb(null, record);
+      }
+    }
+    return cb(null, null);
+  });
+}
+```
+
+`cb` soll für `callback` stehen. `process.nextTick` ist eine Node Standard-Routine
+und verzögert die Ausfühung bis zum Ende des Durchlaufs des "Event-Loops"
+https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/
+
+```JS
+// Configure the local strategy for use by Passport.
+//
+// The local strategy require a `verify` function which receives the credentials
+// (`username` and `password`) submitted by the user.  The function must verify
+// that the password is correct and then invoke `cb` with a user object, which
+// will be set at `req.user` in route handlers after authentication.
+passport.use(new Strategy(
+  function(username, password, cb) {
+    console.log('*************************************************************strategy function');
+    db.users.findByUsername(username, function(err, user) {
+      if (err) { return cb(err); }
+      if (!user) { return cb(null, false); }
+      if (user.password != password) { return cb(null, false); }
+      return cb(null, user);
+    });
+  }));
+```
+
+Hier wird also Passport konfiguiert mit der Local Strategy inklusive Übergabe
+der Suchroutine für einen Benutzer.
+
+```JS
+// Configure Passport authenticated session persistence.
+//
+// In order to restore authentication state across HTTP requests, Passport needs
+// to serialize users into and deserialize users out of the session.  The
+// typical implementation of this is as simple as supplying the user ID when
+// serializing, and querying the user record by ID from the database when
+// deserializing.
+passport.serializeUser(function(user, cb) {
+  console.log('#######################serialize');
+  cb(null, user.id);
+});
+
+passport.deserializeUser(function(id, cb) {
+  console.log('$$$$$$$$$$$$$$$$$$$$$$$$$ deserialize');
+  db.users.findById(id, function (err, user) {
+    if (err) { return cb(err); }
+    cb(null, user);
+  });
+});
+```
+
+Hier passiert noch mehr Konfiguration. Es geht eigentlich ums abspeichern
+und zurückerhalten angemeldeter Benutzer.
+
+Dann folgt noch mehr Konfiguration. Schritt für Schritt:
+
+```JS
+// Create a new Express application.
+var app = express();
+
+// Configure view engine to render EJS templates.
+app.set('views', __dirname + '/views');
+app.set('view engine', 'ejs');
+```
+
+Initialisierung von Express und Festlegung des HTML Codes, der aus EJS
+heraus generiert wird. Beispiel `home.ejs`
+
+```EJS
+<% if (!user) { %>
+	<p>Welcome! Please <a href="/login">log in</a>.</p>
+<% } else { %>
+	<p>Hello, <%= user.username %>. View your <a href="/profile">profile</a>.</p>
+<% } %>
+```
+
+Später im Code sieht man den Befehl `res.render('home', { user: req.user });` 
+mit dem diese Seite dargestellt wird. Der User wird allerdings nicht 
+im Request Header übergeben. Stattdessen mischt sich Passport ein und übersetzt
+den Session Cookie ('connect.sid') mit der Serialize und Deserialize Routine
+in das User Objekt.
+
+Dann gibt es noch mehr Konfiguration:
+
+```JS
+// Use application-level middleware for common functionality, including
+// logging, parsing, and session handling.
+// app.use(require('morgan')('combined'));
+app.use(require('cookie-parser')());
+app.use(require('body-parser').urlencoded({ extended: true }));
+app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
+
+// Initialize Passport and restore authentication state, if any, from the
+// session.
+app.use(passport.initialize());
+app.use(passport.session());
+```
+
+Auskommentiert ist die Logging Middleware `morgan`, schadet aber nicht das mal
+einzukommentieren. `body-parser` stellt sicher, dass der mit POST übergebene
+Body korrekt aufbereitet wird. `express-session` stellt sicher, dass der
+Session Cookie hin und her geht und nur wenn dieser stimmt, die ganze 
+Bearbeitung abläuft. `Passport` übernimmt also nur die User/Password Prüfung 
+und den Lookup des Users aufgrund des Session Cookies!
+
+Zum Schluss werden einfach die einzelnen Routen verarbeitet.
+
+```JS
+// Define routes.
+app.get('/',
+  function(req, res) {
+    console.log('route get / req.user', req.user)
+    res.render('home', { user: req.user });
+  });
+
+app.get('/login',
+  function(req, res){
+    res.render('login');
+  });
+  
+app.post('/login', 
+  passport.authenticate('local', { failureRedirect: '/login' }),
+  function(req, res) {
+    res.redirect('/');
+  });
+  
+app.get('/logout',
+  function(req, res){
+    req.logout();
+    res.redirect('/');
+  });
+
+app.get('/profile',
+  require('connect-ensure-login').ensureLoggedIn(),
+  function(req, res){
+    res.render('profile', { user: req.user });
+  });
+
+app.listen(8080);
+```
+
+Beim POST bei `/login` wird das Passwort geprüft und einfach ohne Fehler
+wieder die Login Route angezeigt, als Übung könnte man hier eine weitere 
+Route zufügen um die Fehlermeldung auszugeben.
+
+Beim GET von `/profile` wird geprüft ob der Benutzer eingeloggt ist.
+
+Zusammenfassung: Das obige Beispiel zeigt, dass Passport einem etwas
+Arbeit abnimmt, aber noch nicht alles. 
+
 ## Teil 3 - Javascript Web Token
 
 Web Tokens haben den Vorteil, dass darin Informationen darüber, wozu der Benutzer
-authorisiert ist enthalten sein können. Es kann darin auch das Verfallsdatum
+authorisiert ist, enthalten sein können. Es kann darin auch das Verfallsdatum
 gespeichert werden. Das Webtoken kann nicht verfälscht werden ohne Private Key.
 Aber es kann natürlich gestohlen und verloren gehen. Dort ist der recht
 sicherere Cookie Mechanismus weiterhin sinnvoll. Daher kann man Cookie nicht 
 mit JWT vergleichen. Das Web Token kann auch im Cookie gespeichert und hin 
-und her gereicht werden.
+und her gereicht werden. JWT wird dann interessant, wenn man ein externen
+Dienstleister verwendet für den Authentifzierungs und Authorisierungs zu
+übernehmen (z.B. Auth0) oder wenn man einen zentralen Server In-House benutzt
+für alle Authentifizierungs und Authorisierungsaufgaben.
 
 ### jwt_demo.js
 

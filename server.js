@@ -67,6 +67,7 @@ app.use(passport.session());
 // Define routes.
 app.get('/',
   function(req, res) {
+    console.log('route get / req.user', req.user)
     res.render('home', { user: req.user });
   });
 
