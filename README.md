@@ -164,7 +164,7 @@ Quelle: Wikipedia
 
 ### JWT
 
-Digital signierter String, der aufgrund der Signatur ganz sicher nur von einem
+JSON Web Token. Digital signierter String, der aufgrund der Signatur ganz sicher nur von einem
 bestimmten Server kommen konnte und damit den Sender des JWT berechtigt
 auf bestimmte Daten auf dem Server zuzugreifen bzw. zu weiteren Operationen
 berechtigt. Zu was der Sender des JWT berechtigt ist, muss sich der Server
@@ -201,6 +201,23 @@ Quelle: https://www.toptal.com/web/cookie-free-authentication-with-json-web-toke
 Hat nicht mit Zahlungsverkehr zu tun. Das sind die eigentlichen Daten 
 nicht das Drumherum, wie Header oder Signatur usw. Im JWT bezeichnet man
 den mittleren Teil als "payload".
+
+### SAML
+
+Security Assertion Markup Language. Eigentlich auch nicht viel anderes wie
+JWT. Gibt es schon länger und ist XML bassiert.
+
+https://stackoverflow.com/questions/27314076/difference-between-jwt-and-saml
+
+Typischer Ablauf laut Wikipedia:
+
+https://en.wikipedia.org/wiki/SAML_2.0#/media/File:Saml2-browser-sso-redirect-post.png
+
+### Single Sign On (SSO)
+
+Einmalige anmelden reicht. Andere Applikationen finden bei der zentralen
+Applikation heraus ob der Benutzer sich korrekt angemeldet hat.
+
 
 ## Teil 1 - Eigene Prüfung
 
