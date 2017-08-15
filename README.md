@@ -1,6 +1,6 @@
 # Seminar 12
 
-In diesem Seminar gehe ich darauf ein, wie man Seiten mit Passwort schützen kann.
+In diesem Seminar gehe ich darauf ein, wie man Seiten mit Passwort einem schützen kann.
 
 ## Schlüsselbegriffe
 
@@ -53,12 +53,60 @@ Man kann mit einem Key verschlüsseln und entschlüsseln.
 SSL = Secure Sockets Layer -  Vorgänger von TLS = Transport Layer Security.
 Verschlüsselungssystem zum sicheren übertragen von Daten. 
 
+### Digitale Signatur
+
+Verfahren um eine Nachricht (z.B. in der Form einer Datei oder einer Folge 
+von Bytes) zu signieren. Mit der Signatur wird bewiesen, dass die Nachricht
+tatsächlich von der Entität erstellt wurde, die behauptet sie erstellt zu 
+haben. Dies geschieht mit asymetrischer Verschlüsselung. Nur der Besitzer 
+des Private Keys ist in der Lage die Signatur zu erstellen.
+
+Um die Signatur zu überprüfen benötigt es die Nachricht, der Signatur und
+des zugehörigen Public Keys. Tatsächliche Signaturen werden mit Hilfe von
+Zertifikaten erstellt. 
+
+### Zertifikat
+
+Eine Datei, die beweisst, dass jemand Besitzer eines Public Keys ist. Wird
+auch "Digitial Certificate" oder "X.509 Certificate" genannt. Die Datei
+enthält den Public Key, Informationen über den Herausgeber des Zertifikates
+(Issuer) und Informationen über den Zertifizierten (Issued To). Die Datei
+wird digital signiert.
+
+### Public Key Infrastruktur (PKI)
+
+Um Sicherheit darüber zu haben ob das Zertifikat echt ist wird eine Public
+Key Infrastruktur benutzt. Eine hierarchische Struktur von Zertifikaten. 
+Es gibt Root Zertikat, dem vertraut werden muss. Der Private Key dieses 
+Zertifikats liegt irgendwo offline und ist speziell physisch geschützt. 
+Unterzertifikate dazu werden erstellt und so kann man sich hoch hangeln.
+
+Beispiel: Man hat eine signierte Nachricht und ein Zertifikat von Bill. 
+Mit dem Public Key im Zertifikat kann man prüfen ob die Nachricht von Bill 
+zertifiziert wurde. Als nächstes wollen wir prüfen ob das Zertifikat
+wirklich von Bill ist. Bills Zertifikat wurde von Verisign signiert.
+Wir haben das Zertifikat von Verisign auf unserem Rechner. Wir benutzen 
+den Public Key des Verisign Zertifikats und prüfen damit Bills Zertifikat. 
+Wir stellen fest, dass es richtig ist. Es ist aber nur ein Verisign 
+Unterzertifkat, wir wollen wissen, dass es richtig ist. Das nächste ist
+das Root Zertifikat von Verisign. Das haben wir auf unserem Rechner
+gespeichert, es wurde mit dem Betriebssystem ausgeliefert. Wir sind sicher,
+dass es richtig ist. Wir prüfen das Verisign Unterzertifikat gegen
+das Root Zertifikat und auch das passt. Jetzt sind wir sicher, dass
+wirklich Bill die Nachricht ausgestellt hat.
+
+Siehe welche Root Zertifikat Stores jeweils benutzt werden in Browsern:
+
+https://certsimple.com/images/blog/root-stores/root-certificate-stores.svg
+https://certsimple.com/blog/control-the-ssl-cas-your-browser-trusts
+
+
 ### HTTPS
 
 Verwendung von TLS beim Übertragen von Daten mit HTTP. Ein gutes Schaubild
 hierzu auf https://comodosslstore.com/blog/how-do-ssl-certificates-works.html
 
-1) Browser an Server: Bitte SSL Verbindung
+1) Browser an Server: Bitte TSL Verbindung
 2) Server an Browser: Hier mein Zertifikat (enthält Public Key und Informationen
 über die Webseite. Zertifikat ist signiert von jemand dem man vertraut)
 3) Browser an Server: Hier ist der mit deinem Public Key verschlüsselte
@@ -66,13 +114,16 @@ Verschlüsselungskey für diese Sitzung. Server entschlüsselt mit dem Private
 Key den Verschlüsselungskey.
 4) Server an Browser: Hier sind die mit dem Verschlüsselungskey verschlüsselten
 Daten.
-Welches symmetrische Verschlüsselungsverfahren benutzt wird wählt der Server
+Welches symmetrische Verschlüsselungsverfahren benutzt wird, wählt der Server
 anhand eine Liste von Verfahren aus, die der Browser vorschlägt: Welche 
 Dein Browser benutzt kannst Du hier abfragen: https://cc.dcsec.uni-hannover.de/
 
 Sicher ist also auf jeden Fall die Verbindung nur mit HTTPS. Dann wird aber
 alles verschlüsselt. Sehen kann man im Browser die URL und die Daten, aber
 über die Leitung geht nichts davon unverschlüsselt.
+
+Siehe auch die Schaubilder hier:
+http://download.microsoft.com/documents/uk/technet/learning/downloads/evenings/29th_Nov-Public_Key_Infrastructure-tell_me_in_plain_English_AND_THEN_deep_technical_how_PKI_works.ppt
 
 ### Cookie
 
@@ -117,9 +168,9 @@ Digital signierter String, der aufgrund der Signatur ganz sicher nur von einem
 bestimmten Server kommen konnte und damit den Sender des JWT berechtigt
 auf bestimmte Daten auf dem Server zuzugreifen bzw. zu weiteren Operationen
 berechtigt. Zu was der Sender des JWT berechtigt ist, muss sich der Server
-nicht merken, weil es steht alles im JWT drin. Vorteil ist, das Systeme 
+nicht merken, weil es steht alles im JWT drin. Vorteil ist, dass Systeme 
 dadurch sehr skalierbar sind. Man stellt einfach ein weiteren Server hin, 
-dieser weitere Rechnung muss im Hauptspeicher nichts über die Session wissen,
+dieser weitere Rechner muss im Hauptspeicher nichts über die Session wissen,
 er kann einfach den JWT nehmen, prüfen und wissen, dass er korrekt ist.
 
 Beispiel eines JWT (3 Teile, durch Punkte getrennt):
@@ -150,7 +201,6 @@ Quelle: https://www.toptal.com/web/cookie-free-authentication-with-json-web-toke
 Hat nicht mit Zahlungsverkehr zu tun. Das sind die eigentlichen Daten 
 nicht das Drumherum, wie Header oder Signatur usw. Im JWT bezeichnet man
 den mittleren Teil als "payload".
-
 
 ## Teil 1 - Eigene Prüfung
 
@@ -213,6 +263,8 @@ Es gibt Headerfelder bei der Anfrage und dann wieder Headerfelder bei der
 Antwort. Wir setzen in der Antwort den Header `Content-Type` auf `text/plain`.
 Üblicher ist hier `text/html`. Der Browser behandelt es dann in der Darstellung
 anders. 
+
+Es empfiehlt sich auch über die Browser Entwicklertools dies genau anzuschauen.
 
 ### Schritt 2: simple2.js
 
