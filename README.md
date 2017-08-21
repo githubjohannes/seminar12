@@ -1,6 +1,7 @@
 # Seminar 12
 
-In diesem Seminar gehe ich darauf ein, wie man Seiten mit Passwort einem schützen kann.
+In diesem Seminar gehe ich darauf ein, wie man Seiten mit einem Passwort 
+schützen kann.
 
 ## Schlüsselbegriffe
 
@@ -9,7 +10,7 @@ Einige wichtige Begriffe in diesem Zusammenhang sind
 ### Authentification
 
 Authentifizierung im deutschen: "Bist Du wirklich der, der Du sagst, der Du bist".
-Eine übliche Methode die Authentifizierung ist die Passwortprüfung, da man
+Eine übliche Methode der Authentifizierung ist die Passwortprüfung, da man
 davon ausgeht, dass nur die wirkliche Person das Passwort kennt. 
 
 ### Authorization
@@ -61,7 +62,7 @@ tatsächlich von der Entität erstellt wurde, die behauptet sie erstellt zu
 haben. Dies geschieht mit asymetrischer Verschlüsselung. Nur der Besitzer 
 des Private Keys ist in der Lage die Signatur zu erstellen.
 
-Um die Signatur zu überprüfen benötigt es die Nachricht, der Signatur und
+Um die Signatur zu überprüfen benötigt es die Nachricht der Signatur und
 des zugehörigen Public Keys. Tatsächliche Signaturen werden mit Hilfe von
 Zertifikaten erstellt. 
 
@@ -75,7 +76,7 @@ wird digital signiert.
 
 ### Public Key Infrastruktur (PKI)
 
-Um Sicherheit darüber zu haben ob das Zertifikat echt ist wird eine Public
+Um Sicherheit darüber zu haben, ob das Zertifikat echt ist wird eine Public
 Key Infrastruktur benutzt. Eine hierarchische Struktur von Zertifikaten. 
 Es gibt Root Zertikat, dem vertraut werden muss. Der Private Key dieses 
 Zertifikats liegt irgendwo offline und ist speziell physisch geschützt. 
@@ -165,7 +166,7 @@ Quelle: Wikipedia
 ### JWT
 
 JSON Web Token. Digital signierter String, der aufgrund der Signatur ganz sicher nur von einem
-bestimmten Server kommen konnte und damit den Sender des JWT berechtigt
+bestimmten Server kommen konnte und damit den Sender des JWT berechtigt,
 auf bestimmte Daten auf dem Server zuzugreifen bzw. zu weiteren Operationen
 berechtigt. Zu was der Sender des JWT berechtigt ist, muss sich der Server
 nicht merken, weil es steht alles im JWT drin. Vorteil ist, dass Systeme 
@@ -198,7 +199,7 @@ Quelle: https://www.toptal.com/web/cookie-free-authentication-with-json-web-toke
 
 ### Payload
 
-Hat nicht mit Zahlungsverkehr zu tun. Das sind die eigentlichen Daten 
+Hat nichts mit Zahlungsverkehr zu tun. Das sind die eigentlichen Daten 
 nicht das Drumherum, wie Header oder Signatur usw. Im JWT bezeichnet man
 den mittleren Teil als "payload".
 
